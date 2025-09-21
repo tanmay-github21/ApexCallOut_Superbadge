@@ -1,5 +1,9 @@
 global class WellnessJourneyRewardsBatch implements Database.Batchable<sObject> {
-
+    
+	/*Command for executing the class 
+	ID jobId=database.executeBatch(rewardsBatch,200);
+	System.debug('Job ID'+'\t'+jobId);*/
+    
     global Database.QueryLocator start(Database.BatchableContext BC) {
     
         Date startDate = getStartDate();                
@@ -26,12 +30,13 @@ global class WellnessJourneyRewardsBatch implements Database.Batchable<sObject> 
         
             // Calculate the number of journeys completed by each user
             Integer goalCount = userGoalCountMap.get(journey.OwnerId);
+            System.debug('Execute method goalCount'+'\t'+goalCount+'\n'+'Execute method User ID'+'\t'+journey.Id);
             goalCount++;
             userGoalCountMap.put(journey.OwnerId,goalCount);
 
             // Check if the user has completed atleast 12 goals in the quarter and hasn't already been added to the array
             if(userGoalCountMap.get(journey.OwnerId)>=12 && !uniqueUserId.contains(journey.OwnerId)){
-            
+            System.debug('Execute method'+'\t'+journey.Id+'\t'+'Isnt there in the uniqueUserId map');
             Map<String, Object> userObj = new Map<String, Object>();
 
                 uniqueUserId.add(journey.OwnerId);
