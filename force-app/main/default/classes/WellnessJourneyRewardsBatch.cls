@@ -6,6 +6,7 @@ global class WellnessJourneyRewardsBatch implements Database.Batchable<sObject> 
         Date endDate = getEndDate();
 
         String query = 'SELECT Id,Name,OwnerId, Owner.Name, Owner.Email, Owner.Username FROM Wellness_Journey__c WHERE Status__c = \'Complete\' AND Completion_Date__c >= :startDate AND Completion_Date__c <= :endDate ORDER BY OwnerId, Completion_Date__c';
+        SYstem.debug('Batch Class Start Method Successfully executed fetching requested records');
         return Database.getQueryLocator(query);
     }
 
