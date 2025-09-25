@@ -1,66 +1,65 @@
-global class WellnessJourneyRewardsBatch implements Database.Batchable<sObject> {
+global class WellnessJourneyRewardsBatch implements Database.Batchable<sObject>,Database.AllowsCallouts {
     
-	/*Command for executing the class 
-	ID jobId=database.executeBatch(rewardsBatch,200);
-	System.debug('Job ID'+'\t'+jobId);*/
+	/*WellnessJourneyRewardsBatch rewardsBatch= new WellnessJourneyRewardsBatch();
+ID jobId=database.executeBatch(rewardsBatch,200);
+System.debug('Job ID'+'\t'+jobId);
+list<map<string,Object>> usersListMap= new list<map<string,Object>>();
+map<string,Object> user1= new map<string,Object>();
+map<string,Object> user2= new map<string,Object>(); 
+user1.put('userId','0051t000003XyzA');
+user1.put('fullName','Tanmoy Dash');
+user1.put('email','tanmay.trailhead@Gmail.com');
+user1.put('username','tanmay.dash26');
+
+user2.put('userId','0052t000003XyzA');
+user2.put('fullName','Alice Michele');
+user2.put('email','alice.michele@Gmail.com');
+user2.put('username','alice.michele84');
+
+usersListMap.add(user1);
+usersListMap.add(user2);
+
+*/
     
     global Database.QueryLocator start(Database.BatchableContext BC) {
     
         Date startDate = getStartDate();                
         Date endDate = getEndDate();
-
+		System.debug('Batch Class start time'+'\t'+startDate+'\n'+'Batch CLass end time'+'\t'+endDate);
         String query = 'SELECT Id,Name,OwnerId, Owner.Name, Owner.Email, Owner.Username FROM Wellness_Journey__c WHERE Status__c = \'Complete\' AND Completion_Date__c >= :startDate AND Completion_Date__c <= :endDate ORDER BY OwnerId, Completion_Date__c';
-        SYstem.debug('Batch Class Start Method Successfully executed fetching requested records');
         return Database.getQueryLocator(query);
     }
 
     global void execute(Database.BatchableContext BC, List<Wellness_Journey__c> scope) {
         Map<Id, Integer> userGoalCountMap = new Map<Id, Integer>();
         Set<Id> uniqueUserId = new Set<Id>();
-        //Array of JSON objects
         List<Map<String, Object>> usersListMap = new List<Map<String, Object>>();
-               
-        // Initialize the map with user IDs and set the initial count to 0
-        
         for (Wellness_Journey__c journey : scope) {
-            userGoalCountMap.put(journey.OwnerId, 0);        
+            userGoalCountMap.put(journey.OwnerId, 0);
         } 
-        
         for (Wellness_Journey__c journey : scope) {
         
-            // Calculate the number of journeys completed by each user
             Integer goalCount = userGoalCountMap.get(journey.OwnerId);
-            System.debug('Execute method goalCount'+'\t'+goalCount+'\n'+'Execute method User ID'+'\t'+journey.Id);
             goalCount++;
             userGoalCountMap.put(journey.OwnerId,goalCount);
 
-            // Check if the user has completed atleast 12 goals in the quarter and hasn't already been added to the array
             if(userGoalCountMap.get(journey.OwnerId)>=12 && !uniqueUserId.contains(journey.OwnerId)){
-            System.debug('Execute method'+'\t'+journey.Id+'\t'+'Isnt there in the uniqueUserId map');
             Map<String, Object> userObj = new Map<String, Object>();
 
                 uniqueUserId.add(journey.OwnerId);
-               
-                //Build JSON object    
-                
                 userObj.put('userId',journey.OwnerId);
                 userObj.put('fullName',journey.Owner.Name);
                 userObj.put('email',journey.Owner.Email);
                 userObj.put('username',journey.Owner.Username);
-                
-                //Add to array
                 usersListMap.add(userObj);
             }
             
         }
-        
         //Serialize JSON
-        String jsonBody;
-        
-        //Invoke Callout
+        String jsonBody=JSON.serialize(usersListMap);
+        SYstem.debug('Calling Rest Service');
         Integer responseCode = RewardsCalloutService.submitUsersForRewardCallout(jsonBody);
-        
-        System.debug('HTTP Response Code: ' + responseCode);        
+        System.debug('Response received from Rest service class: ' + responseCode);        
     }
 
     global void finish(Database.BatchableContext BC) {
