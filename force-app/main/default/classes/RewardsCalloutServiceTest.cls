@@ -4,7 +4,7 @@ private class RewardsCalloutServiceTest {
         list<Wellness_Journey__c> wj1= new list<Wellness_Journey__c>(); 
         list<Wellness_Journey__c> wj2= new list<Wellness_Journey__c>(); 
         date currentYear=date.newInstance(2025,04,01), prevYear=date.newInstance(2024,12,01);
-        for(Integer i=0; i<15;i++){
+		for(Integer i=0; i<15;i++){
             wj1.add(new Wellness_Journey__c(
             name='Last Year'+i,
             Completion_Date__c=prevYear,
